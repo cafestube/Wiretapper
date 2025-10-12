@@ -62,7 +62,6 @@ class PacketInterceptor(
             val packetHandler = p0.pipeline()["packet_handler"] as Connection
 
             override fun write(ctx: ChannelHandlerContext, msg: Any, promise: ChannelPromise) {
-                packetHandler.player.bukkitEntity
                 val connection = getPlayerConnection(packetHandler)
 
                 if(msg is Packet<*> && connection != null) {
