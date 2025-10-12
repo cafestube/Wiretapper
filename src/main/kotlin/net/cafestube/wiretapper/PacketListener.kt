@@ -1,13 +1,31 @@
 package net.cafestube.wiretapper
 
-interface PacketListener {
+/**
+ * Base interface for packet listeners.
+ * API consumers should implement either IncomingPacketListener, OutgoingPacketListener, or both.
+ */
+sealed interface PacketListenerBase
 
-    fun handleIncoming(packetEvent: PacketEvent) {
-        // Default empty implementation
-    }
+fun interface IncomingPacketListener : PacketListenerBase {
 
-    fun handleOutgoing(packetEvent: PacketEvent) {
-        // Default empty implementation
-    }
+    /**
+     * Called when a packet is received from the client.
+     *
+     * @param packetEvent The event containing the packet and context information
+     * @see PacketEvent
+     */
+    fun handleIncoming(packetEvent: PacketEvent)
+
+}
+
+fun interface OutgoingPacketListener : PacketListenerBase {
+
+    /**
+     * Called when a packet is sent from the server.
+     *
+     * @param packetEvent The event containing the packet and context information
+     * @see PacketEvent
+     */
+    fun handleOutgoing(packetEvent: PacketEvent)
 
 }
