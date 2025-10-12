@@ -22,8 +22,8 @@ dependencies {
 paper {
     name = "Wiretapper"
 
-    main = "net.cafestube.wiretapper.plugin.WireTapperPlugin"
-    loader = "net.cafestube.wiretapper.plugin.WireTapperPluginLoader"
+    main = "net.cafestube.wiretapper.plugin.WiretapperPlugin"
+    loader = "net.cafestube.wiretapper.plugin.WiretapperPluginLoader"
 
     generateLibrariesJson = true
     foliaSupported = true
