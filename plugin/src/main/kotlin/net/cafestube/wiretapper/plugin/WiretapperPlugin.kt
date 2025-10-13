@@ -6,12 +6,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.server.PluginDisableEvent
 import org.bukkit.plugin.java.JavaPlugin
 
-private var pluginInstance: WiretapperPlugin? = null
-
-fun getGlobalInterceptor(): PacketInterceptor {
-    checkNotNull(pluginInstance) { "WiretapperPlugin is not initialized yet or not installed. If you use the library standalone, please create your own interceptor." }
-    return pluginInstance!!.interceptor
-}
+internal var pluginInstance: WiretapperPlugin? = null
 
 internal class WiretapperPlugin : JavaPlugin(), Listener {
 

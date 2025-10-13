@@ -16,7 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin
 
 class PacketInterceptor(
     val owningPlugin: JavaPlugin
-) : ChannelInitializeListener {
+) {
 
     private val key = Key.key(owningPlugin.namespace(), "wiretapper/packet-interceptor${ChannelInitializeListenerHolder.getListeners()
         .keys.indexOfLast { it.namespace() == owningPlugin.namespace() && it.value().startsWith("wiretapper/") } + 1}")
@@ -28,7 +28,38 @@ class PacketInterceptor(
 
 
     init {
-        ChannelInitializeListenerHolder.addListener(key, this)
+        ChannelInitializeListenerHolder.addListener(key, object : ChannelInitializeListener {
+            override fun afterInitChannel(p0: Channel) {
+                p0.pipeline().addBefore("packet_handler", key.asString(), object : ChannelDuplexHandler() {
+                    val packetHandler = p0.pipeline()["packet_handler"] as Connection
+
+                    override fun write(ctx: ChannelHandlerContext, msg: Any, promise: ChannelPromise) {
+                        val connection = getPlayerConnection(packetHandler)
+
+                        if(msg is Packet<*> && connection != null) {
+                            val result = handleOutgoingPacket(connection, msg) ?: return
+                            ctx.write(result, promise)
+                            return
+                        }
+
+                        ctx.write(msg, promise)
+                    }
+
+
+                    override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
+                        val connection = getPlayerConnection(packetHandler)
+
+                        if(msg is Packet<*> && connection != null) {
+                            val result = handleIncomingPacket(connection, msg) ?: return
+                            ctx.fireChannelRead(result)
+                            return
+                        }
+                        ctx.fireChannelRead(msg)
+                    }
+
+                })
+            }
+        })
     }
 
     fun registerListener(plugin: JavaPlugin, listener: PacketListenerBase) {
@@ -55,37 +86,6 @@ class PacketInterceptor(
         listenersByPlugin.remove(plugin)
         //We don't update hasReceiveListener/hasSendListener as it's not a big deal if they stay true even if no listeners exist
         //It's an optimization that doesn't need to be perfect
-    }
-
-    override fun afterInitChannel(p0: Channel) {
-        p0.pipeline().addBefore("packet_handler", key.asString(), object : ChannelDuplexHandler() {
-            val packetHandler = p0.pipeline()["packet_handler"] as Connection
-
-            override fun write(ctx: ChannelHandlerContext, msg: Any, promise: ChannelPromise) {
-                val connection = getPlayerConnection(packetHandler)
-
-                if(msg is Packet<*> && connection != null) {
-                    val result = handleOutgoingPacket(connection, msg) ?: return
-                    ctx.write(result, promise)
-                    return
-                }
-
-                ctx.write(msg, promise)
-            }
-
-
-            override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
-                val connection = getPlayerConnection(packetHandler)
-
-                if(msg is Packet<*> && connection != null) {
-                    val result = handleIncomingPacket(connection, msg) ?: return
-                    ctx.fireChannelRead(result)
-                    return
-                }
-                ctx.fireChannelRead(msg)
-            }
-
-        })
     }
 
     private fun getPlayerConnection(connection: Connection): PlayerConnection? {
