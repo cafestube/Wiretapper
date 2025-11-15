@@ -3,7 +3,7 @@ package net.cafestube.wiretapper
 import java.util.ServiceLoader
 
 
-private val globalInterceptor by lazy { ServiceLoader.load(GlobalInterceptor::class.java) }
+private val globalInterceptor by lazy { ServiceLoader.load(GlobalInterceptor::class.java, GlobalInterceptor::class.java.classLoader) }
 
 fun getGlobalPacketInterceptor(): PacketInterceptor {
     return globalInterceptor.firstOrNull()?.getPacketInterceptor()
