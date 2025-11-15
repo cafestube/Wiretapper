@@ -71,12 +71,16 @@ class PacketInterceptor(
     inline fun <reified T: Any> registerListener(plugin: JavaPlugin, direction: PacketDirection, crossinline callback: (PacketEvent, T) -> Unit) {
         if(direction == PacketDirection.SERVERBOUND) {
             registerListener(plugin, IncomingPacketListener { event ->
-                if(event.packet is T) { callback(event, event.getPacketAs()) }
+                if(event.packet is T) {
+                    callback(event, event.getPacketAs())
+                }
             })
             return
         } else {
             registerListener(plugin, OutgoingPacketListener { event ->
-                if(event is T) { callback(event, event.getPacketAs()) }
+                if(event.packet is T) {
+                    callback(event, event.getPacketAs())
+                }
             })
         }
     }
@@ -120,8 +124,10 @@ class PacketInterceptor(
 
         for ((_, list) in listenersByPlugin) {
             for (base in list) {
-                if(base is OutgoingPacketListener) {
+                if(direction == PacketDirection.CLIENTBOUND && base is OutgoingPacketListener) {
                     base.handleOutgoing(packetEvent)
+                } else if(direction == PacketDirection.SERVERBOUND && base is IncomingPacketListener) {
+                    base.handleIncoming(packetEvent)
                 }
             }
         }
@@ -129,7 +135,7 @@ class PacketInterceptor(
         if(packetEvent.isCancelled) return null
 
         val packet = packetEvent.packet
-        check(packet !is Packet<*>) { "Packet modified to a non-packet type!" }
+        check(packet is Packet<*>) { "Packet modified to a non-packet type! Was ${packet.javaClass.simpleName}" }
 
         return packetEvent.packet as Packet<*>
     }
@@ -138,4 +144,5 @@ class PacketInterceptor(
         this.listenersByPlugin.clear()
         ChannelInitializeListenerHolder.removeListener(key)
     }
+
 }
