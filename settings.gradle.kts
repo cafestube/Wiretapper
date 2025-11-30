@@ -3,3 +3,4 @@ plugins {
 }
 rootProject.name = "Wiretapper"
 include("plugin")
+include("codegen")
