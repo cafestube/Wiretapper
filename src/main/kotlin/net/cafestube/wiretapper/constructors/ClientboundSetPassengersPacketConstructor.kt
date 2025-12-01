@@ -14,7 +14,7 @@ fun ClientboundSetPassengersPacket(entityId: Int, passengerIds: IntArray) : Clie
     return packet
 }
 
-fun NewClientboundSetPassengersPacket(entityId: Int, passengerIds: IntArray) : ClientboundSetPassengersPacket {
+fun newClientboundSetPassengersPacket(entityId: Int, passengerIds: IntArray) : ClientboundSetPassengersPacket {
     val buf = FriendlyByteBuf(Unpooled.buffer())
     buf.writeVarInt(entityId)
     buf.writeVarIntArray(passengerIds)

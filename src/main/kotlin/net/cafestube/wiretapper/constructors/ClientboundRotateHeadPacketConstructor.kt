@@ -6,10 +6,10 @@ import net.minecraft.network.protocol.game.ClientboundRotateHeadPacket
 
 @Deprecated(message = "Avoid collisions with actual types. Use NewClientboundRotateHeadPacket instead.")
 fun ClientboundRotateHeadPacket(entityId: Int, yaw: Byte): ClientboundRotateHeadPacket {
-    return NewClientboundRotateHeadPacket(entityId, yaw)
+    return newClientboundRotateHeadPacket(entityId, yaw)
 }
 
-fun NewClientboundRotateHeadPacket(entityId: Int, yaw: Byte): ClientboundRotateHeadPacket {
+fun newClientboundRotateHeadPacket(entityId: Int, yaw: Byte): ClientboundRotateHeadPacket {
     val buf = FriendlyByteBuf(Unpooled.buffer())
     buf.writeVarInt(entityId)
     buf.writeByte(yaw.toInt())
