@@ -9,6 +9,7 @@ import io.papermc.paper.network.ChannelInitializeListener
 import io.papermc.paper.network.ChannelInitializeListenerHolder
 import net.kyori.adventure.key.Key
 import net.minecraft.network.Connection
+import net.minecraft.network.PacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.server.network.ServerCommonPacketListenerImpl
 import org.bukkit.plugin.Plugin
@@ -62,20 +63,21 @@ class PacketInterceptor(
         })
     }
 
-    fun registerListener(plugin: JavaPlugin, listener: PacketListenerBase) {
+    fun registerListener(plugin: JavaPlugin, listener: PacketListenerBase): PacketListenerBase {
         if(listener is IncomingPacketListener) hasReceiveListener = true
         if(listener is OutgoingPacketListener) hasSendListener = true
         listenersByPlugin.computeIfAbsent(plugin) { ArrayList() }.add(listener)
+        return listener
     }
 
-    inline fun <reified T: Any> registerListener(plugin: JavaPlugin, direction: PacketDirection, crossinline callback: (PacketEvent, T) -> Unit) {
-        if(direction == PacketDirection.SERVERBOUND) {
+    inline fun <reified T: Any> registerListener(plugin: JavaPlugin, direction: PacketDirection, crossinline callback: (PacketEvent, T) -> Unit): PacketListenerBase {
+        return if(direction == PacketDirection.SERVERBOUND) {
             registerListener(plugin, IncomingPacketListener { event ->
                 if(event.packet is T) {
                     callback(event, event.getPacketAs())
                 }
             })
-            return
+
         } else {
             registerListener(plugin, OutgoingPacketListener { event ->
                 if(event.packet is T) {
@@ -90,6 +92,10 @@ class PacketInterceptor(
         listenersByPlugin.remove(plugin)
         //We don't update hasReceiveListener/hasSendListener as it's not a big deal if they stay true even if no listeners exist
         //It's an optimization that doesn't need to be perfect
+    }
+
+    fun unregisterListener(plugin: Plugin, listener: PacketListenerBase) {
+        listenersByPlugin[plugin]?.remove(listener)
     }
 
     private fun getPlayerConnection(connection: Connection): PlayerConnection? {
