@@ -14,6 +14,8 @@ import net.minecraft.network.protocol.Packet
 import net.minecraft.server.network.ServerCommonPacketListenerImpl
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
 class PacketInterceptor(
     val owningPlugin: JavaPlugin
@@ -22,7 +24,7 @@ class PacketInterceptor(
     private val key = Key.key(owningPlugin.namespace(), "wiretapper/packet-interceptor${ChannelInitializeListenerHolder.getListeners()
         .keys.indexOfLast { it.namespace() == owningPlugin.namespace() && it.value().startsWith("wiretapper/") } + 1}")
 
-    private val listenersByPlugin = HashMap<Plugin, MutableList<PacketListenerBase>>()
+    private val listenersByPlugin = ConcurrentHashMap<Plugin, MutableList<PacketListenerBase>>()
 
     private var hasReceiveListener: Boolean = false
     private var hasSendListener: Boolean = false
@@ -66,7 +68,7 @@ class PacketInterceptor(
     fun registerListener(plugin: JavaPlugin, listener: PacketListenerBase): PacketListenerBase {
         if(listener is IncomingPacketListener) hasReceiveListener = true
         if(listener is OutgoingPacketListener) hasSendListener = true
-        listenersByPlugin.computeIfAbsent(plugin) { ArrayList() }.add(listener)
+        listenersByPlugin.computeIfAbsent(plugin) { CopyOnWriteArrayList() }.add(listener)
         return listener
     }
 
